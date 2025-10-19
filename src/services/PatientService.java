@@ -59,50 +59,50 @@ public class PatientService {
     }
 
     // ===================== Update Patient =====================
-    public static void updatePatient(Scanner sc, config conf) {
-        viewPatients(sc, conf);
-        try {
-            System.out.print("\nEnter Patient ID to update: ");
-            int id = Integer.parseInt(sc.nextLine().trim());
-
-            List<Map<String, Object>> patient = conf.fetchRecords(
-                "SELECT * FROM tbl_patients WHERE pat_id = ?", id
-            );
-            if (patient.isEmpty()) {
-                System.out.println("❌ Patient not found.");
-                return;
-            }
-
-            Map<String, Object> p = patient.get(0);
-            System.out.print("Enter New Name (" + p.get("pat_name") + "): ");
-            String name = sc.nextLine().trim();
-            if (name.isEmpty()) name = p.get("pat_name").toString();
-
-            System.out.print("Enter New Age (" + p.get("pat_age") + "): ");
-            String ageStr = sc.nextLine().trim();
-            int age = ageStr.isEmpty() ? Integer.parseInt(p.get("pat_age").toString()) : Integer.parseInt(ageStr);
-
-            System.out.print("Enter New Sex (" + p.get("pat_sex") + "): ");
-            String sex = sc.nextLine().trim();
-            if (sex.isEmpty()) sex = p.get("pat_sex").toString();
-
-            System.out.print("Enter New Contact (" + p.get("pat_contact") + "): ");
-            String contact = sc.nextLine().trim();
-            if (contact.isEmpty()) contact = p.get("pat_contact").toString();
-
-            System.out.print("Enter New Address (" + p.get("pat_address") + "): ");
-            String address = sc.nextLine().trim();
-            if (address.isEmpty()) address = p.get("pat_address").toString();
-
-            conf.updateRecord(
-                "UPDATE tbl_patients SET pat_name = ?, pat_age = ?, pat_sex = ?, pat_contact = ?, pat_address = ? WHERE pat_id = ?",
-                name, age, sex, contact, address, id
-            );
-            System.out.println("✅ Patient updated successfully.");
-        } catch (Exception e) {
-            System.out.println("❌ Error updating patient: " + e.getMessage());
-        }
-    }
+//    public static void updatePatient(Scanner sc, config conf) {
+//        viewPatients(sc, conf);
+//        try {
+//            System.out.print("\nEnter Patient ID to update: ");
+//            int id = Integer.parseInt(sc.nextLine().trim());
+//
+//            List<Map<String, Object>> patient = conf.fetchRecords(
+//                "SELECT * FROM tbl_patients WHERE pat_id = ?", id
+//            );
+//            if (patient.isEmpty()) {
+//                System.out.println("❌ Patient not found.");
+//                return;
+//            }
+//
+//            Map<String, Object> p = patient.get(0);
+//            System.out.print("Enter New Name (" + p.get("pat_name") + "): ");
+//            String name = sc.nextLine().trim();
+//            if (name.isEmpty()) name = p.get("pat_name").toString();
+//
+//            System.out.print("Enter New Age (" + p.get("pat_age") + "): ");
+//            String ageStr = sc.nextLine().trim();
+//            int age = ageStr.isEmpty() ? Integer.parseInt(p.get("pat_age").toString()) : Integer.parseInt(ageStr);
+//
+//            System.out.print("Enter New Sex (" + p.get("pat_sex") + "): ");
+//            String sex = sc.nextLine().trim();
+//            if (sex.isEmpty()) sex = p.get("pat_sex").toString();
+//
+//            System.out.print("Enter New Contact (" + p.get("pat_contact") + "): ");
+//            String contact = sc.nextLine().trim();
+//            if (contact.isEmpty()) contact = p.get("pat_contact").toString();
+//
+//            System.out.print("Enter New Address (" + p.get("pat_address") + "): ");
+//            String address = sc.nextLine().trim();
+//            if (address.isEmpty()) address = p.get("pat_address").toString();
+//
+//            conf.updateRecord(
+//                "UPDATE tbl_patients SET pat_name = ?, pat_age = ?, pat_sex = ?, pat_contact = ?, pat_address = ? WHERE pat_id = ?",
+//                name, age, sex, contact, address, id
+//            );
+//            System.out.println("✅ Patient updated successfully.");
+//        } catch (Exception e) {
+//            System.out.println("❌ Error updating patient: " + e.getMessage());
+//        }
+//    }
 
     // ===================== Delete Patient =====================
     public static void deletePatient(Scanner sc, config conf) {

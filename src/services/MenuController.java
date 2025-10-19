@@ -50,24 +50,6 @@ public class MenuController {
             }
         }
     }
-
-    // ===================== Registration =====================
-//    private void handleRegistration() {
-//        System.out.println("\n=== REGISTER ACCOUNT ===");
-//        System.out.println("1. Staff");
-//        System.out.println("2. Admin");
-//        System.out.println("3. Dentist");
-//        System.out.print("Select Role: ");
-//
-//        String role = sc.nextLine();
-//        switch (role) {
-//            case "1": RegistrationService.staffRegister(sc, conf); break;
-//            case "2": RegistrationService.adminRegister(sc, conf); break;
-//            case "3": RegistrationService.dentistRegister(sc, conf); break;
-//            default: System.out.println("❌ Invalid role."); break;
-//        }
-//    }
-
     // ===================== Staff / Dentist Portal =====================
     private void staffPortal() {
         System.out.println("\n== Login ==");
@@ -99,18 +81,16 @@ public class MenuController {
         System.out.println("\n== Staff Dashboard ==");
         System.out.println("1. Manage Patients");
         System.out.println("2. Manage Appointments");
-        System.out.println("3. Manage Dentist Schedules");
-        System.out.println("4. View Dentist Schedules");
-        System.out.println("5. Logout");
+        System.out.println("3. View Dentist Schedules");
+        System.out.println("4. Logout");
         System.out.print("Choice: ");
 
         String choice = sc.nextLine();
         switch (choice) {
             case "1": managePatientsMenu(); break;
             case "2": manageAppointmentsMenu(); break;
-            case "3": DentistService.updateDentistSchedule(sc, conf); break;
-            case "4": DentistService.viewAllDentistSchedules(sc, conf); break;
-            case "5": loop = false; break;
+            case "3": DentistService.viewAllDentistSchedules(sc, conf); break;
+            case "4": loop = false; break;
             default: System.out.println("❌ Invalid option."); break;
         }
     }
@@ -124,18 +104,16 @@ public class MenuController {
             System.out.println("\n== Manage Patients ==");
             System.out.println("1. Add Patient");
             System.out.println("2. View Patients");
-            System.out.println("3. Update Patient");
-            System.out.println("4. Delete Patient");
-            System.out.println("5. Back");
+            System.out.println("3. Delete Patient");
+            System.out.println("4. Back");
             System.out.print("Choice: ");
 
             String choice = sc.nextLine();
             switch (choice) {
                 case "1": PatientService.addPatient(sc, conf); break;
                 case "2": PatientService.viewPatients(sc, conf); break;
-                case "3": PatientService.updatePatient(sc, conf); break;
-                case "4": PatientService.deletePatient(sc, conf); break;
-                case "5": loop = false; break;
+                case "3": PatientService.deletePatient(sc, conf); break;
+                case "4": loop = false; break;
                 default: System.out.println("❌ Invalid option."); break;
             }
         }
@@ -176,9 +154,10 @@ private void dentistDashboard(int dentistId) {
         System.out.println("Email       : " + dentistInfo.get("acc_email"));
         System.out.println("Contact     : " + dentistInfo.get("acc_contact"));
         System.out.println("\n1. View My Appointments");
-        System.out.println("2. Complete Appointment (Add Service)");
+        System.out.println("2. Complete Appointment");
         System.out.println("3. View Completed Appointments");
-        System.out.println("4. Logout");
+	System.out.println("4. Update Schedule");
+        System.out.println("5. Logout");
         System.out.print("Choice: ");
 
         String choice = sc.nextLine().trim();
@@ -193,6 +172,9 @@ private void dentistDashboard(int dentistId) {
     appointmentService.viewCompletedAppointments(conf, sc, dentistId); // ✅ Corrected
     break;
     case "4":
+	DentistService.updateDentistSchedule(sc, conf, dentistId);
+	break;
+    case "5":
     loop = false;
     break;
     default:

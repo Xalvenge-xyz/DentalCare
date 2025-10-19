@@ -2,9 +2,6 @@ package services;
 
 import config.config;
 import java.sql.*;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -18,6 +15,9 @@ public class AuthService {
         System.out.print("Enter Password: ");
         String password = sc.nextLine().trim();
 
+        // 🔒 Hash the entered password before comparing
+        String hashedPassword = config.hashPassword(password);
+
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -28,7 +28,7 @@ public class AuthService {
             String sql = "SELECT * FROM tbl_accounts WHERE acc_email = ? AND acc_pass = ?";
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, email);
-            pstmt.setString(2, password);
+            pstmt.setString(2, hashedPassword);
 
             rs = pstmt.executeQuery();
 
@@ -49,7 +49,7 @@ public class AuthService {
 
                 return user;
             } else {
-                System.out.println("❌ Invalid credentials.");
+                System.out.println("❌ Invalid email or password.");
                 return null;
             }
 

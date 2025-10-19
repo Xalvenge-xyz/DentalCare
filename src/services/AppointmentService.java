@@ -56,7 +56,7 @@ public void scheduleAppointment(config conf, Scanner sc) {
         System.out.print("Enter Patient ID from the list above: ");
         int patientId = Integer.parseInt(sc.nextLine().trim());
 
-
+        // Step 2: Show approved dentists
         List<Map<String, Object>> dentists = conf.fetchRecords(
             "SELECT a.acc_id, a.acc_name, d.specialty FROM tbl_accounts a " +
             "LEFT JOIN tbl_dentists d ON a.acc_id = d.dentist_id " +
@@ -93,11 +93,16 @@ public void scheduleAppointment(config conf, Scanner sc) {
         }
 
         String specialty = dentist.get("specialty") != null ? dentist.get("specialty").toString() : "General Dentistry";
-        String workStart = dentist.get("work_start").toString();
-        String workEnd = dentist.get("work_end").toString();
+        String workStartStr = dentist.get("work_start").toString();
+        String workEndStr = dentist.get("work_end").toString();
         String workDays = dentist.get("work_days").toString();
 
+        LocalTime workStart = LocalTime.parse(workStartStr);
+        LocalTime workEnd = LocalTime.parse(workEndStr);
+
         System.out.println("Selected Dentist Specialty: " + specialty);
+        System.out.println("Working Hours: " + workStart + " - " + workEnd);
+        System.out.println("Working Days: " + workDays);
 
         // Step 4: Enter appointment date
         System.out.print("Enter Appointment Date (YYYY-MM-DD): ");
@@ -121,69 +126,52 @@ public void scheduleAppointment(config conf, Scanner sc) {
             return;
         }
 
-        // Step 6: Suggest available time slots
-	System.out.println("\nChecking available time slots for " + appointmentDate + "...");
+        // Step 6: Check existing booked slots
+        List<Map<String, Object>> booked = conf.fetchRecords(
+            "SELECT app_time FROM tbl_appointments WHERE dentist_id = ? AND app_date = ? AND app_status = 'Scheduled'",
+            dentistId, appointmentDate.toString()
+        );
 
-	 // FIX: Hardcode start time to 8:00 AM (08:00) and end time to 5:00 PM (17:00)
-	 LocalTime start = LocalTime.of(8, 0); // 8:00 AM
-	 LocalTime end = LocalTime.of(17, 0); // 5:00 PM
-	 List<String> bookedTimes = new ArrayList<>();
+        List<String> bookedTimes = new ArrayList<>();
+        for (Map<String, Object> b : booked) {
+            bookedTimes.add(LocalTime.parse(b.get("app_time").toString()).truncatedTo(ChronoUnit.MINUTES).toString());
+        }
 
-	 List<Map<String, Object>> booked = conf.fetchRecords(
-	     "SELECT app_time FROM tbl_appointments WHERE dentist_id = ? AND app_date = ? AND app_status = 'Scheduled'",
-	     dentistId, appointmentDate.toString()
-	 );
-	 for (Map<String, Object> b : booked) {
-	     // Ensure the time format matches for comparison later (e.g., "08:00")
-	     bookedTimes.add(LocalTime.parse(b.get("app_time").toString()).truncatedTo(ChronoUnit.MINUTES).toString());
-	 }
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("h:mm a");
+        System.out.println("\nAvailable Time Slots:");
 
-	 DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("h:mm a");
-	 System.out.println("\nAvailable Time Slots:");
-	 int count = 0;
-	 // The loop will generate times from 8:00 up to (but not including) 17:00 (4:30 PM is the last slot)
-	 for (LocalTime t = start; t.isBefore(end); t = t.plusMinutes(30)) {
-	     String timeStr = t.truncatedTo(ChronoUnit.MINUTES).toString();
-	     if (!bookedTimes.contains(timeStr)) {
-		 System.out.printf("• %s%n", t.format(timeFmt));
-		 count++;
-	     }
-	 }
-	 if (count == 0) {
-	     System.out.println("No available slots for this day.");
-	     return;
-	 }
+        List<LocalTime> availableSlots = new ArrayList<>();
+        int index = 1;
 
-        // Step 7: Enter appointment time
-        System.out.print("\nEnter Appointment Time: ");
-        String appTime = sc.nextLine().trim();
+        for (LocalTime t = workStart; t.isBefore(workEnd); t = t.plusMinutes(30)) {
+            String timeStr = t.truncatedTo(ChronoUnit.MINUTES).toString();
+            if (!bookedTimes.contains(timeStr)) {
+                availableSlots.add(t);
+                System.out.printf("%d. %s%n", index++, t.format(timeFmt));
+            }
+        }
 
-        LocalTime appointmentTime;
+        if (availableSlots.isEmpty()) {
+            System.out.println("❌ No available slots for this day.");
+            return;
+        }
+
+        // ✅ Step 7: Select appointment time instead of typing
+        System.out.print("\nSelect a Time Slot (1-" + availableSlots.size() + "): ");
+        int slotChoice;
         try {
-            appointmentTime = LocalTime.parse(appTime.toUpperCase(), DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH));
-        } catch (Exception e) {
-            System.out.println("Invalid time format. Use hh:mm AM/PM.");
+            slotChoice = Integer.parseInt(sc.nextLine().trim());
+            if (slotChoice < 1 || slotChoice > availableSlots.size()) {
+                System.out.println("❌ Invalid selection. Try again.");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("❌ Invalid input. Please enter a number.");
             return;
         }
 
-        LocalDateTime appointmentDateTime = LocalDateTime.of(appointmentDate, appointmentTime);
-        LocalDateTime now = LocalDateTime.now();
-        if (appointmentDateTime.isBefore(now.plusMinutes(30))) {
-            System.out.println("\nAppointment must be scheduled at least 30 minutes in advance.");
-            return;
-        }
+        LocalTime appointmentTime = availableSlots.get(slotChoice - 1);
 
-        if (appointmentTime.isBefore(start) || !appointmentTime.isBefore(end)) {
-            System.out.println("\nTime is outside working hours (" +
-                start.format(timeFmt) + " - " + end.format(timeFmt) + ").");
-            return;
-        }
-
-        String selectedTimeStr = appointmentTime.truncatedTo(ChronoUnit.MINUTES).toString();
-        if (bookedTimes.contains(selectedTimeStr)) {
-            System.out.println("\nDentist already has an appointment at that time.");
-            return;
-        }
         // Step 8: Specialty-based service selection
         Map<String, List<String>> specialtyServices = new HashMap<>();
         specialtyServices.put("General Dentistry", Arrays.asList("Dental Cleaning", "Dental Checkup", "Oral Examination", "Dental Filling"));
@@ -195,9 +183,7 @@ public void scheduleAppointment(config conf, Scanner sc) {
         specialtyServices.put("Oral Surgery", Arrays.asList("Tooth Extraction", "Wisdom Tooth Removal", "Minor Oral Surgery"));
         specialtyServices.put("Cosmetic Dentistry", Arrays.asList("Teeth Whitening", "Veneers Consultation", "Smile Design"));
 
-        List<String> services = specialtyServices.containsKey(specialty)
-            ? specialtyServices.get(specialty)
-            : Arrays.asList("Dental Checkup");
+        List<String> services = specialtyServices.getOrDefault(specialty, Arrays.asList("Dental Checkup"));
 
         System.out.println("\nSelect Service for Appointment (" + specialty + "):");
         for (int i = 0; i < services.size(); i++) {
@@ -226,12 +212,16 @@ public void scheduleAppointment(config conf, Scanner sc) {
             patientId, dentistId, appointmentDate.toString(), appointmentTime.toString(), service
         );
 
-        System.out.println("\n✅ Appointment scheduled on " + appointmentDate +
-            " at " + appointmentTime.format(timeFmt) + " for " + service + ".");
+        System.out.println("\n✅ Appointment scheduled successfully!");
+        System.out.println("📅 Date: " + appointmentDate);
+        System.out.println("⏰ Time: " + appointmentTime.format(timeFmt));
+        System.out.println("🦷 Service: " + service);
+
     } catch (Exception e) {
         System.out.println("❌ Error scheduling appointment: " + e.getMessage());
     }
 }
+
 
    // ===================== View Scheduled Appointments =====================
 public void viewScheduledAppointments(config conf, Scanner sc) {
@@ -365,7 +355,10 @@ public void viewAllAppointments(config conf, Scanner sc) {
     try {
         // === 1. Display all scheduled appointments first ===
         List<Map<String, Object>> appointments = conf.fetchRecords(
-            "SELECT app_id, patient_name, app_date, app_time, app_status FROM tbl_appointments WHERE app_status = 'Scheduled'"
+            "SELECT a.app_id, p.pat_name, a.app_date, a.app_time, a.app_status " +
+            "FROM tbl_appointments a " +
+            "JOIN tbl_patients p ON a.pat_id = p.pat_id " +
+            "WHERE a.app_status = 'Scheduled'"
         );
 
         if (appointments.isEmpty()) {
@@ -454,6 +447,7 @@ public void viewDentistAppointments(config conf, Scanner sc, int dentistId) {
         );
     }
 }
+
 // ===================== Complete Appointment =====================
 public void completeAppointment(config conf, Scanner sc, int dentistId) {
 
@@ -485,23 +479,52 @@ public void completeAppointment(config conf, Scanner sc, int dentistId) {
     }
 
     System.out.print("\nEnter Appointment ID to mark as Completed: ");
-    int appId = Integer.parseInt(sc.nextLine().trim());
+    int appId;
+    try {
+        appId = Integer.parseInt(sc.nextLine().trim());
+    } catch (NumberFormatException e) {
+        System.out.println("❌ Invalid input. Please enter a valid Appointment ID.");
+        return;
+    }
 
-    System.out.print("Enter Notes/Diagnosis : ");
+    // Check if appointment exists and belongs to this dentist
+    Map<String, Object> appointment = conf.fetchSingleRecord(
+        "SELECT app_id FROM tbl_appointments WHERE app_id = ? AND dentist_id = ? AND app_status IN ('Scheduled', 'Confirmed')",
+        appId, dentistId
+    );
+
+    if (appointment == null) {
+        System.out.println("❌ Invalid Appointment ID or it’s not assigned to you.");
+        return;
+    }
+
+    System.out.print("Enter Notes/Diagnosis: ");
     String notes = sc.nextLine().trim();
-
-    // ✅ Corrected update using varargs syntax
-    String updateAppointment ="UPDATE tbl_appointments SET app_status = 'Completed', app_notes = ? WHERE app_id = ? AND dentist_id = ?";
     String notesApp = notes.isEmpty() ? "N/A" : notes;
-        conf.updateRecord(updateAppointment, notesApp , appId, dentistId);
- 
 
-    if (updated > 0) {
-        System.out.println("✅ Appointment marked as COMPLETED.");
-    } else {
-        System.out.println("❌ Invalid Appointment ID or permission denied.");
+    try {
+        // Update appointment to completed
+        String updateAppointment = 
+            "UPDATE tbl_appointments SET app_status = 'Completed', app_notes = ? WHERE app_id = ? AND dentist_id = ?";
+        conf.updateRecord(updateAppointment, notesApp, appId, dentistId);
+
+        // ✅ Alternative validation — check if update actually applied
+        Map<String, Object> verify = conf.fetchSingleRecord(
+            "SELECT app_status FROM tbl_appointments WHERE app_id = ? AND dentist_id = ?",
+            appId, dentistId
+        );
+
+        if (verify != null && "Completed".equalsIgnoreCase(verify.get("app_status").toString())) {
+            System.out.println("✅ Appointment marked as COMPLETED successfully!");
+        } else {
+            System.out.println("❌ Failed to mark appointment as completed. Please check the database.");
+        }
+
+    } catch (Exception e) {
+        System.out.println("❌ Error updating appointment: " + e.getMessage());
     }
 }
+
 
 // ===================== View Completed Appointments =====================
 public void viewCompletedAppointments(config conf, Scanner sc, int dentistId) {

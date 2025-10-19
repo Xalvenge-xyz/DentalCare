@@ -4,6 +4,17 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/C:/Users/mc37n/Desktop/New%20folder%20(2)/dentalCare-master/src/main/main.java</file>
+            <file>file:/C:/Users/mc37n/Desktop/New%20folder%20(2)/dentalCare-master/src/services/AppointmentService.java</file>
+            <file>file:/C:/Users/mc37n/Desktop/New%20folder%20(2)/dentalCare-master/src/services/ApprovalService.java</file>
+            <file>file:/C:/Users/mc37n/Desktop/New%20folder%20(2)/dentalCare-master/src/services/AuthService.java</file>
+            <file>file:/C:/Users/mc37n/Desktop/New%20folder%20(2)/dentalCare-master/src/services/SuperAdminPortal.java</file>
+            <file>file:/C:/Users/mc37n/Desktop/New%20folder%20(2)/dentalCare-master/src/config/config.java</file>
+            <file>file:/C:/Users/mc37n/Desktop/New%20folder%20(2)/dentalCare-master/src/services/DentistService.java</file>
+            <file>file:/C:/Users/mc37n/Desktop/New%20folder%20(2)/dentalCare-master/src/main/DatabaseSetup.java</file>
+            <file>file:/C:/Users/mc37n/Desktop/New%20folder%20(2)/dentalCare-master/src/services/MenuController.java</file>
+            <file>file:/C:/Users/mc37n/Desktop/New%20folder%20(2)/dentalCare-master/src/services/AdminPortal.java</file>
+            <file>file:/C:/Users/mc37n/Desktop/New%20folder%20(2)/dentalCare-master/src/services/PatientService.java</file>
+            <file>file:/C:/Users/mc37n/Desktop/New%20folder%20(2)/dentalCare-master/src/services/RegistrationService.java</file>
         </group>
     </open-files>
 </project-private>

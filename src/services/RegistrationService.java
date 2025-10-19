@@ -9,7 +9,7 @@ public class RegistrationService {
 
     public static void registerAccount(Scanner sc, config conf) {
         System.out.println("\n==============================");
-        System.out.println("       ACCOUNT REGISTRATION    ");
+        System.out.println("       ACCOUNT REGISTRATION   ");
         System.out.println("==============================");
 
         System.out.println("Please select your role:");
@@ -40,27 +40,58 @@ public class RegistrationService {
 
         System.out.println("\n--- Enter Your Details ---");
         System.out.print("Full Name       : ");
-        String name = sc.nextLine();
+        String name = sc.nextLine().trim();
 
-        System.out.print("Enter Email  : ");
-        String email = sc.nextLine();
+        System.out.print("Email Address   : ");
+        String email = sc.nextLine().trim();
 
         System.out.print("Password        : ");
-        String password = sc.nextLine();
+        String password = sc.nextLine().trim();
+
+        // 🔒 Hash password before saving
+        String hashedPassword = config.hashPassword(password);
 
         System.out.print("Contact Number  : ");
-        String contact = sc.nextLine();
+        String contact = sc.nextLine().trim();
 
-        String query = "INSERT INTO tbl_accounts (acc_name, acc_email, acc_pass, acc_contact, acc_role, acc_status) VALUES (?, ?, ?, ?, ?, ?)";
         try {
-            conf.updateRecord(query, name, email, password, contact, role, status);
+            // Insert into tbl_accounts with hashed password
+            String query = "INSERT INTO tbl_accounts (acc_name, acc_email, acc_pass, acc_contact, acc_role, acc_status) VALUES (?, ?, ?, ?, ?, ?)";
+            conf.updateRecord(query, name, email, hashedPassword, contact, role, status);
 
-            // ✅ If Dentist, also add entry to tbl_dentists
+            // ✅ Dentist specialty selection
             if ("Dentist".equals(role)) {
-                System.out.print("Specialty       : ");
-                String specialty = sc.nextLine();
+                System.out.println("\nSelect Dentist Specialty:");
+                System.out.println("1. Orthodontics");
+                System.out.println("2. Pediatric Dentistry");
+                System.out.println("3. Periodontics");
+                System.out.println("4. Endodontics");
+                System.out.println("5. Prosthodontics");
+                System.out.println("6. Oral Surgery");
+                System.out.print("Enter choice (1-6): ");
 
-                // Fetch dentist acc_id
+                int specialtyChoice;
+                try {
+                    specialtyChoice = Integer.parseInt(sc.nextLine());
+                } catch (NumberFormatException e) {
+                    System.out.println("❌ Invalid input. Dentist registration incomplete.");
+                    return;
+                }
+
+                String specialty;
+                switch (specialtyChoice) {
+                    case 1: specialty = "Orthodontics"; break;
+                    case 2: specialty = "Pediatric Dentistry"; break;
+                    case 3: specialty = "Periodontics"; break;
+                    case 4: specialty = "Endodontics"; break;
+                    case 5: specialty = "Prosthodontics"; break;
+                    case 6: specialty = "Oral Surgery"; break;
+                    default:
+                        System.out.println("❌ Invalid choice. Dentist registration incomplete.");
+                        return;
+                }
+
+                // Fetch dentist ID
                 List<Map<String, Object>> result = conf.fetchRecords(
                         "SELECT acc_id FROM tbl_accounts WHERE acc_email = ?", email);
 

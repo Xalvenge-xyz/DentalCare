@@ -40,8 +40,7 @@ public class SuperAdminPortal {
             System.out.println("5. Deactivate / Reactivate Account");
             System.out.println("6. Delete Account");
             System.out.println("7. View all Data");
-            System.out.println("8. Reset All Data (Dangerous)");
-            System.out.println("9. Logout");
+            System.out.println("8. Logout");
             System.out.print("Select an option: ");
 
             String choice = sc.nextLine();
@@ -69,10 +68,7 @@ public class SuperAdminPortal {
                     showDatabaseSummary();
                     break;
                 case "8":
-                    resetAllData();
-                    break;
-                case "9":
-                    loop = false;
+		    loop = false;
                     System.out.println("🔒 Logged out.");
                     break;
                 default:
@@ -172,36 +168,6 @@ public class SuperAdminPortal {
             System.out.println("Appointments: " + appointments);
         } catch (Exception e) {
             System.out.println("❌ Error showing summary: " + e.getMessage());
-        }
-    }
-
-    // ===================== RESET ALL DATA =====================
-    private void resetAllData() {
-        System.out.print("⚠️ WARNING: This will delete ALL records. Continue? (yes/no): ");
-        String confirm = sc.nextLine().trim().toLowerCase();
-
-        if (!confirm.equals("yes")) {
-            System.out.println("❌ Operation cancelled.");
-            return;
-        }
-
-        System.out.print("Type CONFIRM to proceed: ");
-        String second = sc.nextLine().trim();
-
-        if (!"CONFIRM".equalsIgnoreCase(second)) {
-            System.out.println("❌ Reset cancelled.");
-            return;
-        }
-
-        try {
-            conf.updateRecord("DELETE FROM tbl_appointments");
-            conf.updateRecord("DELETE FROM tbl_dentists");
-            conf.updateRecord("DELETE FROM tbl_patients");
-            conf.updateRecord("DELETE FROM tbl_accounts WHERE acc_role != 'Super Admin'");
-
-            System.out.println("All data wiped except Super Admin account.");
-        } catch (Exception e) {
-            System.out.println("Error resetting data: " + e.getMessage());
         }
     }
 }
